@@ -3,7 +3,7 @@ package {
     author "Brendan Hansen" 
     url "https://github.com/onyx-lang/pkg-webgl2" 
     description "A binding library for WebGL2" 
-    version "0.0.1" 
+    version "0.0.2" 
 }
 
 config {
