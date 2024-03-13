@@ -11,3 +11,11 @@ config {
     dependency_binary_path "./bin" 
 }
 
+build {
+    example {
+        runtime "js" 
+        target "example/example.wasm" 
+        source "example/example.onyx" 
+    }
+}
+

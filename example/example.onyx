@@ -9,7 +9,7 @@
 
 */
 
-#load "./webgl2"
+#load "./../webgl2"
 
 use core.js
 use core.random
