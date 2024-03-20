@@ -12,6 +12,7 @@
 #load "./../webgl2"
 
 use core.js
+use runtime.platform
 use core.random
 use core.math
 use webgl2 {
@@ -24,6 +25,7 @@ use webgl2 {
     GLUniformLocation
 }
 
+start_time: u64
 shader: GLProgram
 triangle_mesh: GLint
 rotation_location: GLUniformLocation
@@ -32,22 +34,24 @@ main :: () {
     logf(.Info, "Initializing")
     js.setup_default_pool()
 
-    glContext := create_context()
+    use glContext := create_context()
     gl.init(glContext)
 
-    shader = create_shader()?
+    shader = create_shader()->expect("Failed to create shader")
     triangle_mesh = create_triangle_mesh()
     rotation_location = gl.getUniformLocation(shader, "u_rot")
 
-    js.Value.Global->set("ONYX", js.Value.Onyx)
-    js.Value.Global->call("requestAnimationFrame", loop)
+    start_time = platform.__time()
+
+    js.Global->set("ONYX", js.Onyx)
+    js.Global->call("requestAnimationFrame", loop)
 }
 
 create_context :: () -> js.Value {
-    doc    := js.Value.Global->get("document")
-    canvas := doc->call("createElement", "canvas")
-    canvas->set("width", js.Value.Global->get("innerWidth"))
-    canvas->set("height", js.Value.Global->get("innerHeight"))
+    use doc    := js.Global->get("document")
+    use canvas := doc->call("createElement", "canvas")
+    canvas->set("width", js.Global->get("innerWidth"))
+    canvas->set("height", js.Global->get("innerHeight"))
 
     doc->get("body")->call("append", canvas)
 
@@ -66,7 +70,7 @@ create_shader :: () -> ? GLProgram {
 
     if gl.getProgramParameter(program, gl.LINK_STATUS) == 0 {
         logf(.Error, "Failed to link program.")
-        js.Value.Global->get("console")->call("log", gl.getProgramInfoLog(program))
+        js.Global->get("console")->call("log", gl.getProgramInfoLog(program))
         return .None
     }
 
@@ -81,7 +85,7 @@ compile_shader :: (type: GLenum, source: str) -> ? GLShader {
 
     if gl.getShaderParameter(shader, gl.COMPILE_STATUS) == 0 {
         logf(.Error, "Failed to compile shader.")
-        js.Value.Global->get("console")->call("log", gl.getShaderInfoLog(shader))
+        js.Global->get("console")->call("log", gl.getShaderInfoLog(shader))
         return .None
     }
 
@@ -137,7 +141,7 @@ loop :: (_: js.Value, args: [] js.Value) -> js.Value {
     gl.clearColor(0.1, 0.1, 0.1, 1)
     gl.clear(gl.COLOR_BUFFER_BIT)
 
-    rotation := args[0]->as_float()->value_or(0) / 1000
+    rotation := cast(f64) (platform.__time() - start_time) / 1000
 
     gl.useProgram(shader)
     gl.uniform1f(rotation_location, ~~rotation)
@@ -145,9 +149,9 @@ loop :: (_: js.Value, args: [] js.Value) -> js.Value {
     gl.bindVertexArray(triangle_mesh)
     gl.drawArrays(gl.TRIANGLES, 0, 3)
 
-    js.Value.Global->call("requestAnimationFrame", loop)
+    js.Global->call("requestAnimationFrame", loop)
 
-    return .Undefined
+    return js.Undefined
 }
 
 
@@ -184,6 +188,6 @@ void main() {
 
 
 to_byte_array :: macro (x: [] $T) -> [] u8 {
-    return .{ ~~ x.data, sizeof(T) * x.count };
+    return .{ ~~ x.data, (sizeof T) * x.count };
 }
 
