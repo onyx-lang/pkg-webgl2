@@ -6,7 +6,7 @@
         <title>WebGL 2 Example</title>
         <script type="module">
             import Onyx from "/example.wasm.js"
-            (await Onyx.create("/example.wasm")).start()
+            (await Onyx.load("/example.wasm")).start()
         </script>
         <style>
         html, body, canvas {
