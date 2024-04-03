@@ -15,15 +15,7 @@ use core.js
 use runtime.platform
 use core.random
 use core.math
-use webgl2 {
-    gl :: package,
-    GLenum,
-    GLint,
-    GLuint,
-    GLShader,
-    GLProgram,
-    GLUniformLocation
-}
+use webgl2 {*}
 
 start_time: u64
 shader: GLProgram
@@ -35,11 +27,11 @@ main :: () {
     js.setup_default_pool()
 
     use glContext := create_context()
-    gl.init(glContext)
+    glInit(glContext)
 
     shader = create_shader()->expect("Failed to create shader")
     triangle_mesh = create_triangle_mesh()
-    rotation_location = gl.getUniformLocation(shader, "u_rot")
+    rotation_location = glGetUniformLocation(shader, "u_rot")
 
     start_time = platform.__time()
 
@@ -60,17 +52,17 @@ create_context :: () -> js.Value {
 }
 
 create_shader :: () -> ? GLProgram {
-    vertex_shader   := compile_shader(gl.VERTEX_SHADER, VERTEX_SOURCE)?
-    fragment_shader := compile_shader(gl.FRAGMENT_SHADER, FRAGMENT_SOURCE)?
+    vertex_shader   := compile_shader(GL_VERTEX_SHADER, VERTEX_SOURCE)?
+    fragment_shader := compile_shader(GL_FRAGMENT_SHADER, FRAGMENT_SOURCE)?
 
-    program := gl.createProgram()
-    gl.attachShader(program, vertex_shader)
-    gl.attachShader(program, fragment_shader)
-    gl.linkProgram(program)
+    program := glCreateProgram()
+    glAttachShader(program, vertex_shader)
+    glAttachShader(program, fragment_shader)
+    glLinkProgram(program)
 
-    if gl.getProgramParameter(program, gl.LINK_STATUS) == 0 {
+    if glGetProgramParameter(program, GL_LINK_STATUS) == 0 {
         logf(.Error, "Failed to link program.")
-        js.Global->get("console")->call("log", gl.getProgramInfoLog(program))
+        js.Global->get("console")->call("log", glGetProgramInfoLog(program))
         return .None
     }
 
@@ -78,14 +70,14 @@ create_shader :: () -> ? GLProgram {
 }
 
 compile_shader :: (type: GLenum, source: str) -> ? GLShader {
-    shader := gl.createShader(type)
+    shader := glCreateShader(type)
 
-    gl.shaderSource(shader, source)
-    gl.compileShader(shader)
+    glShaderSource(shader, source)
+    glCompileShader(shader)
 
-    if gl.getShaderParameter(shader, gl.COMPILE_STATUS) == 0 {
+    if glGetShaderParameter(shader, GL_COMPILE_STATUS) == 0 {
         logf(.Error, "Failed to compile shader.")
-        js.Global->get("console")->call("log", gl.getShaderInfoLog(shader))
+        js.Global->get("console")->call("log", glGetShaderInfoLog(shader))
         return .None
     }
 
@@ -109,28 +101,28 @@ create_triangle_mesh :: () -> GLuint {
     ]
 
     // Create VBO for verticies
-    vertex_buf := gl.createBuffer()
-    gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buf)
-    gl.bufferData(gl.ARRAY_BUFFER, to_byte_array(triangle_data), gl.STATIC_DRAW)
+    vertex_buf := glCreateBuffer()
+    glBindBuffer(GL_ARRAY_BUFFER, vertex_buf)
+    glBufferData(GL_ARRAY_BUFFER, to_byte_array(triangle_data), GL_STATIC_DRAW)
 
-    color_buf := gl.createBuffer()
-    gl.bindBuffer(gl.ARRAY_BUFFER, color_buf)
-    gl.bufferData(gl.ARRAY_BUFFER, to_byte_array(color_data), gl.STATIC_DRAW)
+    color_buf := glCreateBuffer()
+    glBindBuffer(GL_ARRAY_BUFFER, color_buf)
+    glBufferData(GL_ARRAY_BUFFER, to_byte_array(color_data), GL_STATIC_DRAW)
 
     // Create VAO
-    vao := gl.createVertexArray()
-    gl.bindVertexArray(vao)
+    vao := glCreateVertexArray()
+    glBindVertexArray(vao)
     
     // Map pointers
-    gl.enableVertexAttribArray(0)
-    gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buf)
-    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, sizeof Vec2, 0)
+    glEnableVertexAttribArray(0)
+    glBindBuffer(GL_ARRAY_BUFFER, vertex_buf)
+    glVertexAttribPointer(0, 2, GL_FLOAT, false, sizeof Vec2, 0)
 
-    gl.enableVertexAttribArray(1)
-    gl.bindBuffer(gl.ARRAY_BUFFER, color_buf)
-    gl.vertexAttribPointer(1, 4, gl.FLOAT, false, sizeof Color, 0)
+    glEnableVertexAttribArray(1)
+    glBindBuffer(GL_ARRAY_BUFFER, color_buf)
+    glVertexAttribPointer(1, 4, GL_FLOAT, false, sizeof Color, 0)
 
-    gl.bindVertexArray(-1)
+    glBindVertexArray(-1)
 
     return vao
 }
@@ -138,16 +130,16 @@ create_triangle_mesh :: () -> GLuint {
 loop :: (_: js.Value, args: [] js.Value) -> js.Value {
     defer js.release_pooled_objects()
 
-    gl.clearColor(0.1, 0.1, 0.1, 1)
-    gl.clear(gl.COLOR_BUFFER_BIT)
+    glClearColor(0.1, 0.1, 0.1, 1)
+    glClear(GL_COLOR_BUFFER_BIT)
 
     rotation := cast(f64) (platform.__time() - start_time) / 1000
 
-    gl.useProgram(shader)
-    gl.uniform1f(rotation_location, ~~rotation)
+    glUseProgram(shader)
+    glUniform1f(rotation_location, ~~rotation)
 
-    gl.bindVertexArray(triangle_mesh)
-    gl.drawArrays(gl.TRIANGLES, 0, 3)
+    glBindVertexArray(triangle_mesh)
+    glDrawArrays(GL_TRIANGLES, 0, 3)
 
     js.Global->call("requestAnimationFrame", loop)
 
