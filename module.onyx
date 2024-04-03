@@ -1,0 +1,3 @@
+package webgl2
+
+#load "./webgl2.onyx"

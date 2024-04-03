@@ -9,7 +9,7 @@
 
 */
 
-#load "./../webgl2"
+#load "./../module"
 
 use core.js
 use runtime.platform
