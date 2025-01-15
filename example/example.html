@@ -4,9 +4,9 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>WebGL 2 Example</title>
-        <script type="module">
-            import Onyx from "/example.wasm.js"
-            (await Onyx.load("/example.wasm")).start()
+        <script src="/example.wasm.js"></script>
+        <script>
+            Onyx.load("/example.wasm").then(p => p.start())
         </script>
         <style>
         html, body, canvas {
